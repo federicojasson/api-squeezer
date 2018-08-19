@@ -3,45 +3,49 @@ package main
 import (
 	"flag"
 	"github.com/federicojasson/api-squeezer"
+	"github.com/federicojasson/api-squeezer/serial"
+	"github.com/federicojasson/api-squeezer/validation"
 	"log"
 	"math"
 )
 
 func main() {
-	var backoff int
-	var batch int
-	var begin int
-	var contentType string
-	var end int
-	var method string
-	var tolerance int
-	var urlPattern string
+	var file string
+	var verbose bool
+	var spec squeezer.Spec
+	var validators []squeezer.Validator
+	var serializers []squeezer.Serializer
 
-	// TODO: add descriptions
-	flag.IntVar(&backoff, "backoff", 1, "TODO")
-	flag.IntVar(&batch, "batch", 10, "TODO")
-	flag.IntVar(&begin, "begin", 1, "TODO")
-	flag.StringVar(&contentType, "content-type", "application/json", "TODO")
-	flag.IntVar(&end, "end", math.MaxInt32, "TODO")
-	flag.StringVar(&method, "method", "GET", "TODO")
-	flag.IntVar(&tolerance, "tolerance", 10, "TODO")
-	flag.StringVar(&urlPattern, "url-pattern", "", "TODO")
+	// TODO: add usage message
+	flag.StringVar(&file, "file", "", "")
+	flag.BoolVar(&verbose, "verbose", false, "")
+	flag.StringVar(&spec.URLPattern, "url-pattern", "", "")
+	flag.StringVar(&spec.Method, "method", "GET", "")
+	flag.StringVar(&spec.ContentType, "content-type", "application/json", "")
+	flag.IntVar(&spec.Begin, "begin", 1, "")
+	flag.IntVar(&spec.End, "end", math.MaxInt32, "")
+	flag.IntVar(&spec.Batch, "batch", 10, "")
+	flag.IntVar(&spec.Tolerance, "tolerance", 10, "")
+	flag.IntVar(&spec.Backoff, "backoff", 5, "")
 	flag.Parse()
 
-	task, err := squeezer.NewTask(squeezer.Spec{
-		Backoff:     backoff,
-		Batch:       batch,
-		Begin:       begin,
-		ContentType: contentType,
-		End:         end,
-		Method:      method,
-		Tolerance:   tolerance,
-		URLPattern:  urlPattern,
-	})
+	validator := validation.NewNoOpValidator()
+	validators = append(validators, validator)
+
+	if file != "" {
+		serializer := serial.NewFileSerializer(file)
+		serializers = append(serializers, serializer)
+	}
+
+	if verbose {
+		serializer := serial.NewConsoleSerializer()
+		serializers = append(serializers, serializer)
+	}
+
+	runner := squeezer.NewRunner()
+	err := runner.Run(spec, validators, serializers)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	task.Run()
 }
