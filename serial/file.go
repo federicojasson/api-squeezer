@@ -26,14 +26,8 @@ func (s *FileSerializer) Open() error {
 }
 
 func (s *FileSerializer) Close() error {
-	err := s.file.Sync()
-
-	if err != nil {
-		return err
-	}
-
-	// TODO: defer?
-	return s.file.Close()
+	defer s.file.Close()
+	return s.file.Sync()
 }
 
 func (s *FileSerializer) Serialize(data []byte) error {
