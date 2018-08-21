@@ -66,14 +66,14 @@ func (t *Task) Run() error {
 			return err
 		}
 
-		t.process(req)
+		t.execute(req)
 
 		if t.errors > t.spec.Tolerance {
 			break
 		}
 
 		if (i-t.spec.Begin+1)%t.spec.Batch == 0 {
-			t.backOff()
+			t.sleep()
 		}
 	}
 
@@ -92,7 +92,7 @@ func (t *Task) prepare(index int) (*http.Request, error) {
 	return req, nil
 }
 
-func (t *Task) process(req *http.Request) {
+func (t *Task) execute(req *http.Request) {
 	data, err := t.reader.Read(req)
 
 	if err == nil {
@@ -110,7 +110,7 @@ func (t *Task) process(req *http.Request) {
 	}
 }
 
-func (t *Task) backOff() {
+func (t *Task) sleep() {
 	duration := time.Duration(t.spec.Backoff) * time.Second
 	time.Sleep(duration)
 }
