@@ -3,6 +3,7 @@ package squeezer
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -72,7 +73,7 @@ func (t *Task) Run() error {
 			break
 		}
 
-		if (i-t.spec.Begin+1)%t.spec.Batch == 0 {
+		if (i+1) < t.spec.End && (i+1-t.spec.Begin)%t.spec.Batch == 0 {
 			t.sleep()
 		}
 	}
@@ -111,6 +112,7 @@ func (t *Task) execute(req *http.Request) {
 }
 
 func (t *Task) sleep() {
+	log.Printf("Backing off for %d seconds", t.spec.Backoff)
 	duration := time.Duration(t.spec.Backoff) * time.Second
 	time.Sleep(duration)
 }
